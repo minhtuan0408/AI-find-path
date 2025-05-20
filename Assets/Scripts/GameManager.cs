@@ -17,12 +17,13 @@ public class GameManager : MonoBehaviour
     //public List<bool> isChecked;
     // HashSet
 
-
     Stack<GameObject> RoadStack = new Stack<GameObject>();
     Queue<GameObject> RoadQueue = new Queue<GameObject>();
-
+    Dictionary<GameObject, GameObject> cameFrom = new Dictionary<GameObject, GameObject>();
     HashSet<GameObject> visited = new HashSet<GameObject>();
 
+
+    List<GameObject> path;
     public void Awake()
     {
         //print(Player.transform.localPosition);
@@ -41,7 +42,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator PlayerMove(Stack<GameObject> roads, float speed)
     {
-        List<GameObject> path = new List<GameObject>(roads);
+        path = new List<GameObject>(roads);
         path.Reverse();
         Node node = Player.GetComponentInParent<Node>();
         node.isOccupied = false;
@@ -132,16 +133,23 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
-    public bool BFS(GameObject player, Queue<GameObject> Roads, HashSet<GameObject> Visited)
+    public bool BFS(GameObject player, Queue<GameObject> Roads, HashSet<GameObject> Visited, Dictionary<GameObject, GameObject> RealRoadToTarget)
     {
         Node node = player.GetComponentInParent<Node>();
-
+        if (node == null)
+        {
+            Debug.LogWarning("Node hợp lệ.");
+            return false;
+        }
         Roads.Enqueue(node.gameObject);
         visited.Add(node.gameObject);
+        RealRoadToTarget[node.gameObject] = null;
 
         while (Roads.Count > 0)
         {
+            
             GameObject current = Roads.Dequeue();
+            //Debug.Log("Duyệt" + current.name);
             if (current.gameObject.transform.childCount > 0)
             {
                 GameObject TagCheck = current.transform.GetChild(0).gameObject;
@@ -155,7 +163,7 @@ public class GameManager : MonoBehaviour
                 }
             }
                 
-            node = player.GetComponentInParent<Node>();
+            node = current.GetComponentInParent<Node>();
             List<Node> neighbors = new List<Node>();
             if (node.Right != null) neighbors.Add(node.Right);
             if (node.Left != null) neighbors.Add(node.Left);
@@ -169,10 +177,40 @@ public class GameManager : MonoBehaviour
                 {
                     visited.Add(neighbor.gameObject);
                     Roads.Enqueue(neighbor.gameObject);
+                    RealRoadToTarget[neighbor.gameObject] = current;
                 }
             }
         }
         return false;
+    }
+
+    public void BFS_Path()
+    {
+        bool found = BFS(Player, RoadQueue, visited, cameFrom);
+        if (!found)
+        {
+            Debug.Log("Không tìm thấy target");
+        }
+
+        Stack<GameObject> SampleRoad = new Stack<GameObject>();
+        GameObject target = Target;
+        GameObject current = target.transform.parent.gameObject;
+        while (current != null)
+        {
+            SampleRoad.Push(current);
+            current = cameFrom[current];
+        }
+        RoadStack = ReverseStack(SampleRoad);
+        foreach (var road in RoadStack)
+        {
+            Debug.Log("Step " + road.name);
+        }
+    }
+
+    Stack<GameObject> ReverseStack(Stack<GameObject> original)
+    {
+        var list = new List<GameObject>(original);
+        return new Stack<GameObject>(list);
     }
 
 }
