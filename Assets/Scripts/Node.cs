@@ -10,6 +10,7 @@ public class Node : MonoBehaviour
     public Node Up;
     public Node Down;
 
+
     public bool isOccupied;
 
     public void SetNeighbors(List<Node> nodeList, int x, int y, int width, int height)

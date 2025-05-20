@@ -7,6 +7,8 @@ TagManager:
   - Slot
   - Obstacle
   - Target
+  - Riven
+  - Grass
   layers:
   - Default
   - TransparentFX
