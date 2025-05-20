@@ -49,11 +49,11 @@ TagManager:
   - name: Item
     uniqueID: 3003760241
     locked: 0
-  - name: Target
-    uniqueID: 2450728365
-    locked: 0
   - name: Player
     uniqueID: 646780747
+    locked: 0
+  - name: Target
+    uniqueID: 2450728365
     locked: 0
   m_RenderingLayers:
   - Default

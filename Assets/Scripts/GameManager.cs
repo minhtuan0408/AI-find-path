@@ -25,9 +25,14 @@ public class GameManager : MonoBehaviour
     HashSet<GameObject> visited = new HashSet<GameObject>();
 
     Dictionary<GameObject, int> costRoad = new Dictionary<GameObject, int>();
-    List<GameObject> path;
+    List<GameObject> path = new List<GameObject>();
 
     public float cost;
+
+    public int index = 0;
+
+
+    
     public void Awake()
     {
         //print(Player.transform.localPosition);
@@ -44,6 +49,31 @@ public class GameManager : MonoBehaviour
         cost = 0;
     }
 
+    public void HandleInputData(int val)
+    {
+        if (val == 0)   index = 0;
+        else if (val == 1) index = 1;
+        else if (val == 2) index = 2;
+   
+
+    }
+
+    public void Solve()
+    {
+        int a = index;
+        switch (a)
+        {
+            case 0:
+                DPS_Path();
+                break;
+            case 1:
+                BFS_Path();
+                break;
+            case 2:
+                UCS_Path();
+                break;
+        }
+    }
     public void PlayerActive()
     {
         StartCoroutine(PlayerMove(RoadStack, 2f));
