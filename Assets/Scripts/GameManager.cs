@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -19,19 +20,22 @@ public class GameManager : MonoBehaviour
     //public List<bool> isChecked;
     // HashSet
 
+
     Stack<GameObject> RoadStack = new Stack<GameObject>();
     Queue<GameObject> RoadQueue = new Queue<GameObject>();
+    PriorityQueue<GameObject> RoadPriorityQueue = new PriorityQueue<GameObject>();
     Dictionary<GameObject, GameObject> cameFrom = new Dictionary<GameObject, GameObject>();
     HashSet<GameObject> visited = new HashSet<GameObject>();
 
     Dictionary<GameObject, int> costRoad = new Dictionary<GameObject, int>();
     List<GameObject> path = new List<GameObject>();
 
-    public float cost;
+    public int costTotal;
+
 
     public int index = 0;
 
-
+    public TextMeshProUGUI Nofication;
     
     public void Awake()
     {
@@ -46,7 +50,7 @@ public class GameManager : MonoBehaviour
         visited.Clear();
         costRoad.Clear();
         path.Clear();
-        cost = 0;
+        costTotal = 0;
     }
 
     public void HandleInputData(int val)
@@ -112,8 +116,14 @@ public class GameManager : MonoBehaviour
 
         if (!found)
         {
+            Nofication.text = "Không tìm thấy target - reset mảng để thử lại";
             Debug.Log("Không tìm thấy target");
         }
+        else
+        {
+            Nofication.text = "";
+        }
+      
     }
     public bool DFS(GameObject player, Stack<GameObject> Roads, HashSet<GameObject> Visited)
     {
@@ -245,7 +255,11 @@ public class GameManager : MonoBehaviour
         bool found = BFS(Player, RoadQueue, visited, cameFrom);
         if (!found)
         {
-            Debug.Log("Không tìm thấy target");
+            Nofication.text = "Không tìm thấy target - reset mảng để thử lại";
+        }
+        else 
+        {
+            Nofication.text = "";
         }
 
         Stack<GameObject> SampleRoad = new Stack<GameObject>();
@@ -261,6 +275,8 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("Step " + road.name);
         }
+
+   
     }
 
     Stack<GameObject> ReverseStack(Stack<GameObject> original)
@@ -272,7 +288,7 @@ public class GameManager : MonoBehaviour
 
     // Riven = 5 cost
     // Grass = 3 Cost
-    public bool UCS(GameObject player, Queue<GameObject> Roads, HashSet<GameObject> visited, Dictionary<GameObject, GameObject> RealRoadToTarget, Dictionary<GameObject, int> costRoad)
+    public bool UCS(GameObject player, PriorityQueue<GameObject> Roads, HashSet<GameObject> visited, Dictionary<GameObject, GameObject> RealRoadToTarget, Dictionary<GameObject, int> costRoad)
     {
         Node node = player.GetComponentInParent<Node>();
         if (node == null)
@@ -281,7 +297,7 @@ public class GameManager : MonoBehaviour
             return false;
         }
 
-        Roads.Enqueue(node.gameObject);
+        Roads.Enqueue(node.gameObject, 0);
         costRoad[node.gameObject] = 0;
         RealRoadToTarget[node.gameObject] = null;
 
@@ -313,6 +329,8 @@ public class GameManager : MonoBehaviour
             {
                 GameObject neighborObj = neighbor.gameObject;
 
+                if (visited.Contains(neighborObj)) continue;
+
                 int stepCost = 0; 
                 if (neighborObj.transform.childCount > 0)
                 {
@@ -328,9 +346,9 @@ public class GameManager : MonoBehaviour
                 {
                     costRoad[neighborObj] = newCost;
                     RealRoadToTarget[neighborObj] = current;
-                    Roads.Enqueue(neighborObj);
+                    Roads.Enqueue(neighborObj, newCost);
                 }
-            }
+        }
             visited.Add(current);
         }
         return false;
@@ -338,11 +356,8 @@ public class GameManager : MonoBehaviour
 
     public void UCS_Path() 
     {
-        bool found = UCS(Player, RoadQueue, visited, cameFrom, costRoad);
-        if (!found)
-        {
-            Debug.Log("Không tìm thấy target");
-        }
+        bool found = UCS(Player, RoadPriorityQueue, visited, cameFrom, costRoad);
+
 
         Stack<GameObject> SampleRoad = new Stack<GameObject>();
         GameObject target = Target;
@@ -357,5 +372,28 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("Step " + road.name);
         }
+
+        GameObject start = Player.transform.parent.gameObject;
+        GameObject end = Target.transform.parent.gameObject;
+        if (costRoad.ContainsKey(end))
+        {
+            costTotal = costRoad[end];  
+        }
+
+        if (!found)
+        {
+            Debug.Log("Không tìm thấy target");
+            Nofication.text = "Không tìm thấy target";
+        }
+        else
+        {
+            Nofication.text = "Tổng tiền : " + costTotal.ToString();
+        }
+
+        foreach (var road in RoadStack)
+        {
+            Debug.Log("Step " + road.name);
+        }
+
     }
 }
